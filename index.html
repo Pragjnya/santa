@@ -16,11 +16,24 @@ body {
     linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
     url("./office-christmas.jpg");
   background-size: cover;
-  background-position: center;
+  background-position: center 20%;
   background-repeat: no-repeat;
   background-attachment: fixed;
   color: white;
   overflow: hidden;
+}
+
+/* vignette for premium look */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0,0,0,0) 40%,
+    rgba(0,0,0,0.45) 100%
+  );
+  pointer-events: none;
 }
 
 /* Subtle snow */
@@ -45,7 +58,8 @@ body {
   width: 90%;
   max-width: 420px;
   margin: auto;
-  margin-top: 8vh;
+  top: 50%;
+  transform: translateY(-50%);
   padding: 30px;
   background: rgba(20,20,20,0.65);
   backdrop-filter: blur(20px);
@@ -219,8 +233,7 @@ function pickName() {
   const fake = pool.map(p => p.name);
 
   let i = 0;
-  const audio = document.getElementById("jingle");
-  audio.play().catch(() => {});
+  document.getElementById("jingle").play().catch(()=>{});
 
   const interval = setInterval(() => {
     drawBox.textContent = fake[i % fake.length];
@@ -229,24 +242,18 @@ function pickName() {
 
   setTimeout(() => {
     clearInterval(interval);
-
     const selected = pool[Math.floor(Math.random() * pool.length)];
-
     if (navigator.vibrate) navigator.vibrate([200,100,200]);
-
     drawBox.textContent = selected.name;
 
     setTimeout(() => {
       drawScreen.classList.add("hidden");
-
       receiverName.textContent = selected.name;
       itemName.textContent = selected.item;
       itemLink.textContent = selected.link || "—";
-
       receiversLeft = receiversLeft.filter(p => p.name !== selected.name);
       pickersDone.push(currentPicker);
       assignments.push(`${currentPicker} → ${selected.name}`);
-
       resultScreen.classList.remove("hidden");
     }, 900);
   }, 2600);
@@ -290,4 +297,3 @@ for (let i = 0; i < 18; i++) {
 
 </body>
 </html>
-
