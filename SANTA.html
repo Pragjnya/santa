@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TEF10 Christmas Secret Santa</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(to bottom, #0b3d2e, #041f18);
+  color: white;
+}
+
+/* LIGHTS */
+.lights {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  height: 55px;
+  display: flex;
+  justify-content: space-evenly;
+  z-index: 5;
+}
+.lights span {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  animation: blink 2s infinite alternate;
+}
+.lights span:nth-child(odd) { background: #ff5252; }
+.lights span:nth-child(even) { background: #ffeb3b; }
+@keyframes blink { from { opacity: .3; } to { opacity: 1; } }
+
+/* SANTA */
+.santa {
+  position: fixed;
+  top: 80px;
+  left: -120px;
+  font-size: 50px;
+  animation: santaFly 18s linear infinite;
+  z-index: 2;
+}
+@keyframes santaFly {
+  from { left: -120px; }
+  to { left: 110vw; }
+}
+
+/* SNOW */
+.snow span {
+  position: fixed;
+  top: -10px;
+  width: 6px;
+  height: 6px;
+  background: white;
+  border-radius: 50%;
+  opacity: 0.8;
+  animation: snowFall linear infinite;
+}
+@keyframes snowFall {
+  to { transform: translateY(110vh); }
+}
+
+/* CARD */
+.container {
+  position: relative;
+  z-index: 10;
+  width: 90%;
+  max-width: 420px;
+  margin: auto;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(18px);
+  border-radius: 25px;
+  padding: 28px;
+  text-align: center;
+  box-shadow: 0 0 40px rgba(0,0,0,0.4);
+}
+
+h1 { margin: 0; font-size: 26px; }
+h2 { margin: 6px 0 10px; font-size: 14px; opacity: .8; }
+
+.warning {
+  font-size: 12px;
+  color: #ffeb3b;
+  margin-bottom: 15px;
+}
+
+/* COMMON */
+button {
+  width: 100%;
+  padding: 14px;
+  font-size: 17px;
+  border-radius: 15px;
+  border: none;
+  background: linear-gradient(135deg, #d32f2f, #ff5252);
+  color: white;
+  cursor: pointer;
+}
+button:disabled { background: gray; }
+
+select, input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  font-size: 16px;
+  margin-top: 10px;
+}
+
+/* SLOT */
+.roll-box {
+  height: 70px;
+  border-radius: 15px;
+  border: 2px solid rgba(255,255,255,.6);
+  font-size: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  background: rgba(0,0,0,.25);
+}
+
+/* SCREENS */
+.screen { display: none; }
+.screen.active { display: block; animation: fadeIn .4s ease; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.result p { margin: 10px 0; font-size: 16px; }
+a { color: #ffeb3b; word-break: break-word; }
+
+.final {
+  font-size: 18px;
+  line-height: 1.6;
+}
+</style>
+</head>
+
+<body>
+
+<div class="lights">
+  <span></span><span></span><span></span><span></span><span></span>
+  <span></span><span></span><span></span><span></span><span></span>
+</div>
+
+<div class="santa">🎅</div>
+<div class="snow" id="snow"></div>
+
+<div class="container">
+  <h1>TEF10 Christmas</h1>
+  <h2>Secret Santa Draw</h2>
+  <div class="warning">Do not refresh. Each person can pick only once.</div>
+
+  <!-- SELECT NAME -->
+  <div id="selectScreen" class="screen active">
+    <p>Select your name</p>
+    <select id="pickerSelect"></select>
+    <button onclick="confirmPicker()">Continue</button>
+  </div>
+
+  <!-- READY -->
+  <div id="readyScreen" class="screen">
+    <div class="roll-box">Are you ready?</div>
+    <button onclick="startRoll()">Yes, reveal</button>
+  </div>
+
+  <!-- ROLL -->
+  <div id="rollScreen" class="screen">
+    <div class="roll-box" id="rollBox">Rolling...</div>
+  </div>
+
+  <!-- RESULT -->
+  <div id="resultScreen" class="screen result">
+    <p><strong>Your Secret Santa is for:</strong></p>
+    <p id="pickedName" style="font-size:18px"></p>
+    <p><strong>Item:</strong> <span id="itemName"></span></p>
+    <p><strong>Link:</strong> <a id="itemLink" target="_blank"></a></p>
+    <button onclick="nextPerson()">Done</button>
+  </div>
+
+  <!-- FINAL -->
+  <div id="finalScreen" class="screen final">
+    <p>All names have been picked.</p>
+    <p>Merry Christmas TEF10.</p>
+
+    <button onclick="showPin()" style="margin-top:15px;">Host Access</button>
+
+    <div id="pinBox" style="display:none;">
+      <input type="password" id="hostPin" placeholder="Enter PIN">
+      <button onclick="unlockHost()">Unlock</button>
+    </div>
+
+    <div id="hostPanel" style="display:none; margin-top:15px; text-align:left;">
+      <h3 style="font-size:16px;">Final Assignments</h3>
+      <ul id="finalList" style="font-size:14px;"></ul>
+    </div>
+  </div>
+</div>
+
+<script>
+const HOST_PIN = "2512"; // change if needed
+
+let remaining = [
+  { name: "Sucharitha", item: "Any dark colored top", link: "" },
+  { name: "Akash", item: "Gyro Ball", link: "https://amzn.in/d/8VfElt3" },
+  { name: "Vidhath", item: "3D Galaxy Crystal Ball", link: "Available on Blinkit" },
+  { name: "Infant", item: "Perfume", link: "" },
+  { name: "Varsha", item: "Diary or Mug", link: "" },
+  { name: "Yaskhith", item: "Die cast bike or preferred gift", link: "" },
+  { name: "Harshit", item: "Money Plant", link: "" },
+  { name: "Nithin", item: "Amazon Voucher", link: "" },
+  { name: "Hanshith", item: "Money Plant", link: "https://www.fnp.com" },
+  { name: "Sumanth", item: "Shirt", link: "" }
+];
+
+let assignments = [];
+let currentPicker = null;
+let interval;
+
+const selectScreen = document.getElementById("selectScreen");
+const readyScreen = document.getElementById("readyScreen");
+const rollScreen = document.getElementById("rollScreen");
+const resultScreen = document.getElementById("resultScreen");
+const finalScreen = document.getElementById("finalScreen");
+const rollBox = document.getElementById("rollBox");
+const pickerSelect = document.getElementById("pickerSelect");
+
+function show(screen) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  screen.classList.add("active");
+}
+
+function refreshDropdown() {
+  pickerSelect.innerHTML = "";
+  remaining.forEach(p => {
+    const opt = document.createElement("option");
+    opt.value = p.name;
+    opt.textContent = p.name;
+    pickerSelect.appendChild(opt);
+  });
+}
+refreshDropdown();
+
+function confirmPicker() {
+  currentPicker = pickerSelect.value;
+  show(readyScreen);
+}
+
+function startRoll() {
+  show(rollScreen);
+
+  interval = setInterval(() => {
+    const pool = remaining.filter(p => p.name !== currentPicker);
+    const r = pool[Math.floor(Math.random() * pool.length)];
+    rollBox.textContent = r.name;
+  }, 70);
+
+  setTimeout(() => {
+    clearInterval(interval);
+    const pool = remaining.filter(p => p.name !== currentPicker);
+    const selected = pool[Math.floor(Math.random() * pool.length)];
+
+    document.getElementById("pickedName").textContent = selected.name;
+    document.getElementById("itemName").textContent = selected.item;
+
+    const link = document.getElementById("itemLink");
+    if (selected.link) {
+      link.textContent = selected.link;
+      link.href = selected.link;
+    } else {
+      link.textContent = "No link provided";
+      link.removeAttribute("href");
+    }
+
+    assignments.push({ giver: currentPicker, receiver: selected.name });
+
+    remaining = remaining.filter(p =>
+      p.name !== selected.name && p.name !== currentPicker
+    );
+
+    refreshDropdown();
+    show(resultScreen);
+  }, 2500);
+}
+
+function nextPerson() {
+  if (remaining.length <= 1) {
+    show(finalScreen);
+  } else {
+    show(selectScreen);
+  }
+}
+
+/* HOST PIN */
+function showPin() {
+  document.getElementById("pinBox").style.display = "block";
+}
+
+function unlockHost() {
+  const entered = document.getElementById("hostPin").value;
+  if (entered === HOST_PIN) {
+    const list = document.getElementById("finalList");
+    list.innerHTML = "";
+    assignments.forEach(a => {
+      const li = document.createElement("li");
+      li.textContent = a.giver + " → " + a.receiver;
+      list.appendChild(li);
+    });
+    document.getElementById("hostPanel").style.display = "block";
+  }
+}
+
+/* SNOW */
+const snow = document.getElementById("snow");
+for (let i = 0; i < 60; i++) {
+  const s = document.createElement("span");
+  s.style.left = Math.random() * 100 + "vw";
+  s.style.animationDuration = 5 + Math.random() * 6 + "s";
+  s.style.opacity = Math.random();
+  snow.appendChild(s);
+}
+</script>
+
+</body>
+</html>
