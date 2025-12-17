@@ -32,17 +32,17 @@ body {
   to { transform: translateY(110vh); }
 }
 
-/* SANTA */
+/* SANTA SLEIGH */
 .santa {
   position: fixed;
-  top: 70px;
-  left: -120px;
-  font-size: 48px;
-  animation: santaFly 18s linear infinite;
-  opacity: 0.9;
+  top: 60px;
+  left: -300px;
+  font-size: 34px;
+  animation: santaFly 20s linear infinite;
+  white-space: nowrap;
 }
 @keyframes santaFly {
-  from { left: -120px; }
+  from { left: -300px; }
   to { left: 110vw; }
 }
 
@@ -95,7 +95,9 @@ button {
 
 <body>
 
-<div class="santa">🎅</div>
+<!-- Santa Sleigh -->
+<div class="santa">🦌🦌🦌🛷🎅🏼</div>
+
 <div class="snow" id="snow"></div>
 
 <div class="container">
@@ -130,6 +132,7 @@ button {
     <p>Merry Christmas TEF10.</p>
 
     <button onclick="showPin()">Host Access</button>
+    <p style="font-size:12px;opacity:0.7;">Host only</p>
 
     <div id="pinBox" class="hidden">
       <input type="password" id="hostPin" placeholder="Enter PIN">
@@ -198,6 +201,11 @@ function pickName() {
 
   const pool = receiversLeft.filter(p => p.name !== currentPicker);
   const selected = pool[Math.floor(Math.random() * pool.length)];
+
+  // VIBRATION ON REVEAL
+  if (navigator.vibrate) {
+    navigator.vibrate([200, 100, 200]);
+  }
 
   document.getElementById("receiverName").textContent = selected.name;
   document.getElementById("itemName").textContent = selected.item;
