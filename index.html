@@ -6,50 +6,102 @@
 <title>TEF10 Christmas Secret Santa</title>
 
 <style>
+* { box-sizing: border-box; }
+
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
-  background: #0b3d2e;
+  font-family: "Segoe UI", sans-serif;
+  height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(to bottom, #0b3d2e, #041f18);
   color: white;
 }
 
+/* SNOW */
+.snow span {
+  position: fixed;
+  top: -10px;
+  width: 6px;
+  height: 6px;
+  background: white;
+  border-radius: 50%;
+  opacity: 0.8;
+  animation: snowFall linear infinite;
+}
+@keyframes snowFall {
+  to { transform: translateY(110vh); }
+}
+
+/* SANTA */
+.santa {
+  position: fixed;
+  top: 70px;
+  left: -120px;
+  font-size: 48px;
+  animation: santaFly 18s linear infinite;
+  opacity: 0.9;
+}
+@keyframes santaFly {
+  from { left: -120px; }
+  to { left: 110vw; }
+}
+
+/* CARD */
 .container {
-  max-width: 400px;
-  margin: 40px auto;
+  width: 90%;
+  max-width: 420px;
+  margin: auto;
+  margin-top: 8vh;
   padding: 25px;
-  background: rgba(255,255,255,0.1);
-  border-radius: 20px;
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(18px);
+  border-radius: 25px;
   text-align: center;
 }
 
-select, button {
+h1 { margin: 0; font-size: 26px; }
+h2 { margin: 5px 0 15px; font-size: 14px; opacity: .8; }
+
+.warning {
+  font-size: 12px;
+  color: #ffeb3b;
+  margin-bottom: 15px;
+}
+
+select, input, button {
   width: 100%;
   padding: 12px;
-  margin-top: 12px;
-  border-radius: 10px;
+  border-radius: 12px;
   border: none;
   font-size: 16px;
+  margin-top: 12px;
 }
 
 button {
-  background: #d32f2f;
+  background: linear-gradient(135deg, #d32f2f, #ff5252);
   color: white;
 }
 
 .hidden { display: none; }
 
-.result {
-  margin-top: 20px;
+.result p { margin: 10px 0; }
+
+.final {
+  font-size: 18px;
+  line-height: 1.6;
 }
 </style>
 </head>
 
 <body>
 
-<div class="container">
+<div class="santa">🎅</div>
+<div class="snow" id="snow"></div>
 
-  <h2>TEF10 Christmas</h2>
-  <p>Secret Santa</p>
+<div class="container">
+  <h1>TEF10 Christmas</h1>
+  <h2>Secret Santa</h2>
+  <div class="warning">Do not refresh during the game</div>
 
   <!-- PICKER -->
   <div id="pickerScreen">
@@ -73,14 +125,28 @@ button {
   </div>
 
   <!-- FINAL -->
-  <div id="finalScreen" class="hidden">
-    <h3>All 10 people have picked</h3>
-    <p>Merry Christmas TEF10</p>
-  </div>
+  <div id="finalScreen" class="hidden final">
+    <p>All 10 people have picked.</p>
+    <p>Merry Christmas TEF10.</p>
 
+    <button onclick="showPin()">Host Access</button>
+
+    <div id="pinBox" class="hidden">
+      <input type="password" id="hostPin" placeholder="Enter PIN">
+      <button onclick="unlockHost()">Unlock</button>
+    </div>
+
+    <div id="hostPanel" class="hidden" style="text-align:left;">
+      <h3 style="font-size:16px;">Final List</h3>
+      <ul id="finalList" style="font-size:14px;"></ul>
+    </div>
+  </div>
 </div>
 
 <script>
+const HOST_PIN = "2512";
+
+/* PEOPLE */
 const people = [
   { name: "Sucharitha", item: "Any dark colored top" },
   { name: "Akash", item: "Gyro Ball" },
@@ -96,6 +162,7 @@ const people = [
 
 let receiversLeft = [...people];
 let pickersDone = [];
+let assignments = [];
 let currentPicker = null;
 
 /* UI */
@@ -103,24 +170,25 @@ const pickerScreen = document.getElementById("pickerScreen");
 const readyScreen = document.getElementById("readyScreen");
 const resultScreen = document.getElementById("resultScreen");
 const finalScreen = document.getElementById("finalScreen");
+const pickerSelect = document.getElementById("pickerSelect");
 
+/* INIT */
 function refreshPickerDropdown() {
-  const select = document.getElementById("pickerSelect");
-  select.innerHTML = "";
+  pickerSelect.innerHTML = "";
   people
     .filter(p => !pickersDone.includes(p.name))
     .forEach(p => {
       const opt = document.createElement("option");
       opt.value = p.name;
       opt.textContent = p.name;
-      select.appendChild(opt);
+      pickerSelect.appendChild(opt);
     });
 }
-
 refreshPickerDropdown();
 
+/* FLOW */
 function confirmPicker() {
-  currentPicker = document.getElementById("pickerSelect").value;
+  currentPicker = pickerSelect.value;
   pickerScreen.classList.add("hidden");
   readyScreen.classList.remove("hidden");
 }
@@ -136,6 +204,7 @@ function pickName() {
 
   receiversLeft = receiversLeft.filter(p => p.name !== selected.name);
   pickersDone.push(currentPicker);
+  assignments.push(currentPicker + " → " + selected.name);
 
   resultScreen.classList.remove("hidden");
 }
@@ -149,6 +218,33 @@ function next() {
     refreshPickerDropdown();
     pickerScreen.classList.remove("hidden");
   }
+}
+
+/* HOST PIN */
+function showPin() {
+  document.getElementById("pinBox").classList.remove("hidden");
+}
+
+function unlockHost() {
+  if (document.getElementById("hostPin").value === HOST_PIN) {
+    const list = document.getElementById("finalList");
+    list.innerHTML = "";
+    assignments.forEach(a => {
+      const li = document.createElement("li");
+      li.textContent = a;
+      list.appendChild(li);
+    });
+    document.getElementById("hostPanel").classList.remove("hidden");
+  }
+}
+
+/* SNOW */
+const snow = document.getElementById("snow");
+for (let i = 0; i < 50; i++) {
+  const s = document.createElement("span");
+  s.style.left = Math.random() * 100 + "vw";
+  s.style.animationDuration = 5 + Math.random() * 6 + "s";
+  snow.appendChild(s);
 }
 </script>
 
