@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TEF10 Christmas Secret Santa</title>
+<title>TEF10 Christmas – Secret Santa</title>
 
 <style>
 * { box-sizing: border-box; }
@@ -12,60 +12,67 @@ body {
   margin: 0;
   font-family: "Segoe UI", sans-serif;
   height: 100vh;
-  overflow: hidden;
-  background: linear-gradient(to bottom, #0b3d2e, #041f18);
+  background:
+    linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
+    url("office-christmas.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   color: white;
+  overflow: hidden;
 }
 
-/* SNOW */
+/* Subtle snow */
 .snow span {
   position: fixed;
   top: -10px;
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
   background: white;
   border-radius: 50%;
-  opacity: 0.8;
+  opacity: 0.4;
   animation: snowFall linear infinite;
 }
 @keyframes snowFall {
   to { transform: translateY(110vh); }
 }
 
-/* SANTA SLEIGH */
-.santa {
-  position: fixed;
-  top: 60px;
-  left: -300px;
-  font-size: 34px;
-  animation: santaFly 20s linear infinite;
-  white-space: nowrap;
-}
-@keyframes santaFly {
-  from { left: -300px; }
-  to { left: 110vw; }
-}
-
-/* CARD */
+/* Card */
 .container {
+  position: relative;
+  z-index: 5;
   width: 90%;
   max-width: 420px;
   margin: auto;
   margin-top: 8vh;
-  padding: 25px;
-  background: rgba(255,255,255,0.12);
-  backdrop-filter: blur(18px);
-  border-radius: 25px;
+  padding: 30px;
+  background: rgba(20,20,20,0.65);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
   text-align: center;
+  box-shadow:
+    0 30px 70px rgba(0,0,0,0.7),
+    inset 0 0 0 1px rgba(255,255,255,0.08);
 }
 
-h1 { margin: 0; font-size: 26px; }
-h2 { margin: 5px 0 15px; font-size: 14px; opacity: .8; }
+h1 {
+  margin: 0;
+  font-size: 26px;
+}
+
+h2 {
+  margin: 6px 0 16px;
+  font-size: 13px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
 
 .warning {
   font-size: 12px;
-  color: #ffeb3b;
-  margin-bottom: 15px;
+  color: #d4af37;
+  margin-bottom: 18px;
 }
 
 select, input, button {
@@ -78,7 +85,7 @@ select, input, button {
 }
 
 button {
-  background: linear-gradient(135deg, #d32f2f, #ff5252);
+  background: linear-gradient(135deg, #c62828, #ff5252);
   color: white;
 }
 
@@ -86,23 +93,31 @@ button {
 
 .result p { margin: 10px 0; }
 
-.final {
-  font-size: 18px;
-  line-height: 1.6;
+.draw-box {
+  height: 70px;
+  border-radius: 14px;
+  border: 2px dashed rgba(255,255,255,0.4);
+  font-size: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 18px 0;
+  background: rgba(0,0,0,0.25);
 }
 </style>
 </head>
 
 <body>
 
-<!-- Santa Sleigh -->
-<div class="santa">🦌🦌🦌🛷🎅🏼</div>
-
 <div class="snow" id="snow"></div>
+
+<audio id="jingle">
+  <source src="https://cdn.pixabay.com/audio/2022/11/17/audio_6a5e4a6b16.mp3" type="audio/mpeg">
+</audio>
 
 <div class="container">
   <h1>TEF10 Christmas</h1>
-  <h2>Secret Santa</h2>
+  <h2>Secret Santa Draw</h2>
   <div class="warning">Do not refresh during the game</div>
 
   <!-- PICKER -->
@@ -114,8 +129,14 @@ button {
 
   <!-- READY -->
   <div id="readyScreen" class="hidden">
-    <p>Are you ready?</p>
+    <p>Ready for the draw?</p>
     <button onclick="pickName()">Reveal</button>
+  </div>
+
+  <!-- DRAW -->
+  <div id="drawScreen" class="hidden">
+    <p style="opacity:0.8;">Shuffling names...</p>
+    <div class="draw-box" id="drawBox">—</div>
   </div>
 
   <!-- RESULT -->
@@ -123,64 +144,57 @@ button {
     <p><strong>You are gifting:</strong></p>
     <h3 id="receiverName"></h3>
     <p><strong>Item:</strong> <span id="itemName"></span></p>
+    <p><strong>Link:</strong> <span id="itemLink"></span></p>
     <button onclick="next()">Done</button>
   </div>
 
   <!-- FINAL -->
-  <div id="finalScreen" class="hidden final">
-    <p>All 10 people have picked.</p>
-    <p>Merry Christmas TEF10.</p>
+  <div id="finalScreen" class="hidden">
+    <p>All names have been picked.</p>
+    <p style="opacity:0.85; font-size:14px;">
+      May your gifts be thoughtful,<br>
+      your conversations warm,<br>
+      and your holidays restful.
+    </p>
+    <p>Merry Christmas, TEF10.</p>
 
     <button onclick="showPin()">Host Access</button>
-    <p style="font-size:12px;opacity:0.7;">Host only</p>
 
     <div id="pinBox" class="hidden">
       <input type="password" id="hostPin" placeholder="Enter PIN">
       <button onclick="unlockHost()">Unlock</button>
     </div>
 
-    <div id="hostPanel" class="hidden" style="text-align:left;">
-      <h3 style="font-size:16px;">Final List</h3>
-      <ul id="finalList" style="font-size:14px;"></ul>
-    </div>
+    <ul id="finalList" class="hidden" style="text-align:left; font-size:14px;"></ul>
   </div>
 </div>
 
 <script>
 const HOST_PIN = "2512";
 
-/* PEOPLE */
 const people = [
   { name: "Infant", item: "Perfume", link: "Link will be sent shortly" },
   { name: "Vidhath", item: "3D Galaxy Crystal Ball", link: "Available on Blinkit" },
   { name: "Hanshith", item: "Money Plant", link: "Link will be sent on WhatsApp" },
   { name: "Nithin", item: "Amazon Voucher", link: "" },
   { name: "Akash", item: "Gyro Ball", link: "Link will be sent on WhatsApp" },
-  { name: "Harshith", item: "Money Plant", link: "Link will be sent on WhatsApp" },
+  { name: "Harshith", item: "Gift", link: "Link will be sent on WhatsApp" },
   { name: "Yakshith", item: "Die cast bike / anything you prefer", link: "Link will be sent on WhatsApp" },
   { name: "Sucharitha", item: "Any dark colored top", link: "" },
   { name: "Varsha", item: "Diary book / Mug", link: "" },
   { name: "Sumanth", item: "Shirt", link: "" }
 ];
 
-
 let receiversLeft = [...people];
 let pickersDone = [];
 let assignments = [];
 let currentPicker = null;
 
-/* UI */
-const pickerScreen = document.getElementById("pickerScreen");
-const readyScreen = document.getElementById("readyScreen");
-const resultScreen = document.getElementById("resultScreen");
-const finalScreen = document.getElementById("finalScreen");
 const pickerSelect = document.getElementById("pickerSelect");
 
-/* INIT */
 function refreshPickerDropdown() {
   pickerSelect.innerHTML = "";
-  people
-    .filter(p => !pickersDone.includes(p.name))
+  people.filter(p => !pickersDone.includes(p.name))
     .forEach(p => {
       const opt = document.createElement("option");
       opt.value = p.name;
@@ -190,7 +204,6 @@ function refreshPickerDropdown() {
 }
 refreshPickerDropdown();
 
-/* FLOW */
 function confirmPicker() {
   currentPicker = pickerSelect.value;
   pickerScreen.classList.add("hidden");
@@ -199,28 +212,48 @@ function confirmPicker() {
 
 function pickName() {
   readyScreen.classList.add("hidden");
+  drawScreen.classList.remove("hidden");
 
+  const drawBox = document.getElementById("drawBox");
   const pool = receiversLeft.filter(p => p.name !== currentPicker);
-  const selected = pool[Math.floor(Math.random() * pool.length)];
+  const fake = pool.map(p => p.name);
 
-  // VIBRATION ON REVEAL
-  if (navigator.vibrate) {
-    navigator.vibrate([200, 100, 200]);
-  }
+  let i = 0;
+  const audio = document.getElementById("jingle");
+  audio.play().catch(() => {});
 
-  document.getElementById("receiverName").textContent = selected.name;
-  document.getElementById("itemName").textContent = selected.item;
+  const interval = setInterval(() => {
+    drawBox.textContent = fake[i % fake.length];
+    i++;
+  }, 60);
 
-  receiversLeft = receiversLeft.filter(p => p.name !== selected.name);
-  pickersDone.push(currentPicker);
-  assignments.push(currentPicker + " → " + selected.name);
+  setTimeout(() => {
+    clearInterval(interval);
 
-  resultScreen.classList.remove("hidden");
+    const selected = pool[Math.floor(Math.random() * pool.length)];
+
+    if (navigator.vibrate) navigator.vibrate([200,100,200]);
+
+    drawBox.textContent = selected.name;
+
+    setTimeout(() => {
+      drawScreen.classList.add("hidden");
+
+      receiverName.textContent = selected.name;
+      itemName.textContent = selected.item;
+      itemLink.textContent = selected.link || "—";
+
+      receiversLeft = receiversLeft.filter(p => p.name !== selected.name);
+      pickersDone.push(currentPicker);
+      assignments.push(`${currentPicker} → ${selected.name}`);
+
+      resultScreen.classList.remove("hidden");
+    }, 900);
+  }, 2600);
 }
 
 function next() {
   resultScreen.classList.add("hidden");
-
   if (pickersDone.length === people.length) {
     finalScreen.classList.remove("hidden");
   } else {
@@ -229,35 +262,31 @@ function next() {
   }
 }
 
-/* HOST PIN */
 function showPin() {
-  document.getElementById("pinBox").classList.remove("hidden");
+  pinBox.classList.remove("hidden");
 }
 
 function unlockHost() {
-  if (document.getElementById("hostPin").value === HOST_PIN) {
-    const list = document.getElementById("finalList");
-    list.innerHTML = "";
+  if (hostPin.value === HOST_PIN) {
+    finalList.innerHTML = "";
     assignments.forEach(a => {
       const li = document.createElement("li");
       li.textContent = a;
-      list.appendChild(li);
+      finalList.appendChild(li);
     });
-    document.getElementById("hostPanel").classList.remove("hidden");
+    finalList.classList.remove("hidden");
   }
 }
 
-/* SNOW */
+/* Snow */
 const snow = document.getElementById("snow");
-for (let i = 0; i < 50; i++) {
+for (let i = 0; i < 18; i++) {
   const s = document.createElement("span");
   s.style.left = Math.random() * 100 + "vw";
-  s.style.animationDuration = 5 + Math.random() * 6 + "s";
+  s.style.animationDuration = 6 + Math.random() * 6 + "s";
   snow.appendChild(s);
 }
 </script>
 
 </body>
 </html>
-
-
